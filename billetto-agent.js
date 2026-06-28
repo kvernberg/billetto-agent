@@ -14,14 +14,30 @@ function stripHtml(html) {
 }
 
 async function main() {
-  const res = await fetch(URL);
-  if (!res.ok) throw new Error(`Billetto svarte med status ${res.status}`);
+  const res = await fetch(URL, {
+    headers: {
+      "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36",
+      "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+      "Accept-Language": "no,nb-NO;q=0.9,en;q=0.8"
+    }
+  });
 
-  const text = stripHtml(await res.text());
+  if (!res.ok) {
+    throw new Error(`Billetto svarte med status ${res.status}`);
+  }
+
+  const html = await res.text();
+  fs.writeFileSync("debug.html", html);
+
+  const text = stripHtml(html);
   const ticketsMatch = text.match(/Billetter\s+(\d+)\s*\/\s*(\d+)/i);
   const priceMatch = text.match(/Pris\s+([\d,.]+)\s*NOK/i);
 
-  if (!ticketsMatch) throw new Error("Fant ikke billettall.");
+  if (!ticketsMatch) {
+    console.log("Fant ikke billettall. Lagret debug.html.");
+    console.log(text.slice(0, 1000));
+    throw new Error("Fant ikke billettall.");
+  }
 
   const sold = Number(ticketsMatch[1]);
   const capacity = Number(ticketsMatch[2]);
