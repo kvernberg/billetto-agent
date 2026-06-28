@@ -20,14 +20,18 @@ jobs:
         with:
           node-version: 22
 
+      - run: npm install playwright
+
+      - run: npx playwright install chromium
+
       - run: node billetto-agent.js
 
-      - name: Upload debug html
+      - name: Upload debug text
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: debug-html
-          path: debug.html
+          name: debug-text
+          path: debug.txt
 
       - name: Commit status
         if: success()
