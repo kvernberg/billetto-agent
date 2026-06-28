@@ -2,19 +2,49 @@ const nodemailer = require("nodemailer");
 
 const URL = "https://billetto.no/sales_tracker/events/7575fc1d-2382-454d-8639-d88a06569bb9";
 
+function stripHtml(html) {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function extractNumberAfter(label, text) {
+  const index = text.toLowerCase().indexOf(label.toLowerCase());
+  if (index === -1) return null;
+
+  const slice = text.slice(index, index + 300);
+  const match = slice.match(/(\d+)\s*\/\s*(\d+)/);
+
+  return match
+    ? { sold: Number(match[1]), capacity: Number(match[2]) }
+    : null;
+}
+
 async function main() {
   const res = await fetch(URL);
-  const html = await res.text();
 
-  const ticketsMatch = html.match(/<span>(\d+)\s*\/\s*(\d+)<\/span>/);
-  const priceMatch = html.match(/Pris[\s\S]*?<span>([\d,.]+)\s*NOK<\/span>/);
-
-  if (!ticketsMatch) {
-    throw new Error("Fant ikke billettall i HTML.");
+  if (!res.ok) {
+    throw new Error(`Billetto svarte med status ${res.status}`);
   }
 
-  const sold = Number(ticketsMatch[1]);
-  const capacity = Number(ticketsMatch[2]);
+  const html = await res.text();
+  const text = stripHtml(html);
+
+  const tickets = extractNumberAfter("Billetter", text);
+
+  if (!tickets) {
+    throw new Error("Fant ikke billettall etter teksten 'Billetter'.");
+  }
+
+  const priceMatch = text.match(/Pris\s+([\d,.]+)\s*NOK/i);
+
+  const sold = tickets.sold;
+  const capacity = tickets.capacity;
   const percent = Math.round((sold / capacity) * 100);
   const remaining = capacity - sold;
   const price = priceMatch ? priceMatch[1] : "ukjent";
