@@ -1,28 +1,22 @@
-const { chromium } = require("playwright");
 const nodemailer = require("nodemailer");
 
 const URL = "https://billetto.no/sales_tracker/events/7575fc1d-2382-454d-8639-d88a06569bb9";
 
 async function main() {
-  const browser = await chromium.launch();
-  const page = await browser.newPage();
+  const res = await fetch(URL);
+  const html = await res.text();
 
-  await page.goto(URL, { waitUntil: "networkidle" });
+  const ticketsMatch = html.match(/<span>(\d+)\s*\/\s*(\d+)<\/span>/);
+  const priceMatch = html.match(/Pris[\s\S]*?<span>([\d,.]+)\s*NOK<\/span>/);
 
-  const text = await page.locator("body").innerText();
-  await browser.close();
-
-  const ticketsMatch = text.match(/Billetter\s+(\d+)\s*\/\s*(\d+)/i);
-  const percentMatch = text.match(/Prosent utsolgt\s+(\d+)%/i);
-  const remainingMatch = text.match(/Resterende billetter\s+(\d+)/i);
-  const priceMatch = text.match(/Pris\s+([\d,.]+)\s*NOK/i);
-
-  if (!ticketsMatch) throw new Error("Fant ikke billettall på siden.");
+  if (!ticketsMatch) {
+    throw new Error("Fant ikke billettall i HTML.");
+  }
 
   const sold = Number(ticketsMatch[1]);
   const capacity = Number(ticketsMatch[2]);
-  const percent = percentMatch ? Number(percentMatch[1]) : Math.round((sold / capacity) * 100);
-  const remaining = remainingMatch ? Number(remainingMatch[1]) : capacity - sold;
+  const percent = Math.round((sold / capacity) * 100);
+  const remaining = capacity - sold;
   const price = priceMatch ? priceMatch[1] : "ukjent";
 
   const body =
