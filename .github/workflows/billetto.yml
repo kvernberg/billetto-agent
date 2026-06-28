@@ -22,7 +22,15 @@ jobs:
 
       - run: node billetto-agent.js
 
+      - name: Upload debug html
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-html
+          path: debug.html
+
       - name: Commit status
+        if: success()
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
