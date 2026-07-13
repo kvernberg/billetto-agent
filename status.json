@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-07-13T11:42:45.880Z",
+  "updated_at": "2026-07-13T18:19:24.609Z",
   "source": "Billetto",
   "venue": "Ålesund",
-  "sold": 90,
+  "sold": 95,
   "capacity": 190,
-  "remaining": 100,
-  "percent_sold": 47.4,
+  "remaining": 95,
+  "percent_sold": 50,
   "price_nok": 390,
   "url": "https://billetto.no/sales_tracker/session/new/2F6CB462:FJZoXKWDYDqq2VJvs0oBEN7gI9F75MTucTfjR1Z3"
 }
